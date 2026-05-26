@@ -11,6 +11,7 @@ ranked by how well each recipe matches what they already have.
 - Find potential meals based on ingredient overlap
 - See match percentages and missing ingredients
 - View a quick cooking method for each suggested meal
+- Smart ingredient alias matching (e.g., "beef" matches "ground beef")
 
 ## Run Locally
 
@@ -26,8 +27,31 @@ ranked by how well each recipe matches what they already have.
 	http://localhost:8000
 	```
 
-## Files
+## Project Structure
 
-- `index.html` - App layout and structure
-- `styles.css` - Styling and responsive design
-- `app.js` - Ingredient input logic and recipe matching algorithm
+```
+recipegenerator/
+├── index.html              # Main HTML entry point
+├── styles.css              # All styling & animations
+├── js/
+│   ├── data.js             # Recipes & ingredient aliases (Data Layer)
+│   ├── state.js            # Ingredient state management (State Layer)
+│   ├── matching.js         # Recipe matching algorithm (Logic Layer)
+│   ├── renderer.js         # DOM rendering & updates (UI Layer)
+│   ├── events.js           # Event listener setup (Events Layer)
+│   └── main.js             # App initialization
+└── app.js                  # Legacy (now split into modular components)
+```
+
+## Architecture
+
+The app follows a **layered component architecture**:
+
+- **Data Layer** (`js/data.js`) — Recipe catalog (70+ meals) and ingredient aliases (20+ groups)
+- **State Layer** (`js/state.js`) — Ingredient state management
+- **Logic Layer** (`js/matching.js`) — Recipe matching algorithm with smart alias expansion
+- **Renderer Layer** (`js/renderer.js`) — DOM manipulation and component rendering
+- **Events Layer** (`js/events.js`) — Event listener delegation
+- **UI Layer** (`index.html`, `styles.css`) — HTML structure and responsive styling
+
+See [CODE_LAYERS.md](CODE_LAYERS.md) for detailed layer-to-code mapping and [ARCHITECTURE.md](ARCHITECTURE.md) for visual diagrams.

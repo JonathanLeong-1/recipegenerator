@@ -1,6 +1,25 @@
 # Code Layer Breakdown
 
-This document maps each architectural layer to its actual implementation in the codebase.
+This document maps each architectural layer to its modular component implementation in the codebase.
+
+---
+
+## Project Structure
+
+```
+recipegenerator/
+├── index.html          # Main HTML entry point
+├── styles.css          # All styling
+├── js/                 # Modular JavaScript components
+│   ├── data.js         # Data Layer: recipes and aliases
+│   ├── state.js        # State Layer: ingredient management
+│   ├── matching.js     # Logic Layer: recipe matching algorithm
+│   ├── renderer.js     # UI Layer: DOM rendering
+│   ├── events.js       # Events Layer: event listener setup
+│   └── main.js         # Initialization and app startup
+├── app.js              # (Legacy - now broken into modules)
+└── styles.css          # Styling (unchanged)
+```
 
 ---
 
@@ -16,19 +35,19 @@ The HTML structure that defines all interactive elements:
 | [Find Recipes button](index.html#L54-L57) | Triggers search | Lines 54–57 |
 | [Results container](index.html#L59-L62) | Displays recipe matches | Lines 59–62 |
 
-**Key Element IDs** used in JavaScript:
-- `#ingredientForm` — Form wrapper
-- `#ingredientInput` — Text input field
-- `#ingredientChips` — Container for ingredient pills
-- `#findRecipesBtn` — Search trigger button
-- `#clearAllBtn` — Clear all ingredients button
-- `#results` — Recipe results display area
+**Script loading order** (Lines 45–56):
+1. `js/data.js` — Load data first
+2. `js/state.js` — Then state management
+3. `js/matching.js` — Then matching logic
+4. `js/renderer.js` — Then rendering functions
+5. `js/events.js` — Then event setup
+6. `js/main.js` — Finally initialization
 
 ---
 
 ## Styling Layer — [styles.css](styles.css)
 
-CSS rules that style and animate each UI element:
+CSS rules that style and animate each UI element (unchanged from previous):
 
 | Component | Purpose | Location |
 |-----------|---------|----------|
@@ -38,90 +57,101 @@ CSS rules that style and animate each UI element:
 | [Ingredient form](styles.css#L83-L99) | Input field and button styling | Lines 83–99 |
 | [Chips animation](styles.css#L112-L132) | `.chip` entrance animation | Lines 112–132 |
 | [Results cards](styles.css#L141-L165) | Recipe result card styling and animation | Lines 141–165 |
-| [Responsive media query](styles.css#L199-L217) | Mobile breakpoint adjustments | Lines 199–217 |
-
-**Key CSS Classes:**
-- `.app` — Main container
-- `.card` — Card component wrapper
-- `.chip` — Individual ingredient pill
-- `.result-card` — Recipe result display
-- `.score` — Match percentage styling
 
 ---
 
-## Logic Layer — [app.js](app.js)
+## Data Layer — [js/data.js](js/data.js)
 
-JavaScript functions that handle state, events, and matching:
-
-### State Management
+Recipes and ingredient aliases (data definitions):
 
 | Item | Purpose | Location |
 |------|---------|----------|
-| [userIngredients Set](app.js#L77) | Stores selected ingredient names | Line 77 |
+| [ingredientAliases](js/data.js#L1-L26) | 20+ ingredient groupings for fuzzy matching | Lines 1–26 |
+| [recipeCatalog](js/data.js#L28-END) | 70+ recipes with name, ingredients, and notes | Lines 28–END |
 
-### Input Handling
-
-| Function | Purpose | Location |
-|----------|---------|----------|
-| [addIngredient()](app.js#L84-L88) | Adds ingredient to state | Lines 84–88 |
-| [removeIngredient()](app.js#L90-L93) | Removes ingredient from state | Lines 90–93 |
-| [clearIngredients()](app.js#L95-L100) | Clears all ingredients | Lines 95–100 |
-| [normalizeIngredient()](app.js#L80-L82) | Trims and lowercases input | Lines 80–82 |
-
-### Matching Algorithm
-
-| Function | Purpose | Location |
-|----------|---------|----------|
-| [expandIngredient()](app.js#L32-L45) | Maps user input to recipe ingredient variations | Lines 32–45 |
-| [matchRecipes()](app.js#L574-L601) | Scores and sorts recipes by ingredient overlap | Lines 574–601 |
-
-### DOM Rendering
-
-| Function | Purpose | Location |
-|----------|---------|----------|
-| [renderIngredients()](app.js#L102-L127) | Renders ingredient chips UI | Lines 102–127 |
-| [renderResults()](app.js#L603-L656) | Renders recipe result cards | Lines 603–656 |
-
-### Event Listeners
-
-| Event | Handler | Location |
-|-------|---------|----------|
-| Form submit | [addIngredient + focus](app.js#L658-L663) | Lines 658–663 |
-| Find button click | [matchRecipes + renderResults](app.js#L665-L669) | Lines 665–669 |
-| Clear button click | [clearIngredients](app.js#L671-L672) | Lines 671–672 |
-| Chip remove button | [removeIngredient](app.js#L119) | Line 119 |
+**Exports:** `ingredientAliases`, `recipeCatalog`
 
 ---
 
-## Data Layer — [app.js](app.js)
+## State Layer — [js/state.js](js/state.js)
 
-The recipe catalog and ingredient aliases:
+Ingredient state management and manipulation:
 
-### Ingredient Aliases Map
+| Function | Purpose | Location |
+|----------|---------|----------|
+| [userIngredients](js/state.js#L3) | Global Set storing selected ingredients | Line 3 |
+| [normalizeIngredient()](js/state.js#L5-L7) | Trims and lowercases input | Lines 5–7 |
+| [addIngredient()](js/state.js#L9-L14) | Adds ingredient to state | Lines 9–14 |
+| [removeIngredient()](js/state.js#L16-L19) | Removes ingredient from state | Lines 16–19 |
+| [clearIngredients()](js/state.js#L21-L25) | Clears all ingredients | Lines 21–25 |
+| [getIngredients()](js/state.js#L27-L29) | Returns current ingredients | Lines 27–29 |
+
+**Exports:** `userIngredients`, `addIngredient()`, `removeIngredient()`, `clearIngredients()`, `getIngredients()`
+
+---
+
+## Logic Layer — [js/matching.js](js/matching.js)
+
+Recipe matching algorithm and ingredient alias expansion:
+
+| Function | Purpose | Location |
+|----------|---------|----------|
+| [expandIngredient()](js/matching.js#L3-L16) | Maps user input to recipe ingredient variations | Lines 3–16 |
+| [matchRecipes()](js/matching.js#L18-END) | Scores and sorts recipes by ingredient overlap | Lines 18–END |
+
+**Exports:** `expandIngredient()`, `matchRecipes()`
+
+**Dependencies:** Requires `ingredientAliases` from data.js, `userIngredients` from state.js, and `recipeCatalog` from data.js
+
+---
+
+## Renderer Layer — [js/renderer.js](js/renderer.js)
+
+DOM manipulation and rendering functions:
+
+| Function | Purpose | Location |
+|----------|---------|----------|
+| [renderIngredients()](js/renderer.js#L3-L32) | Renders ingredient chips UI | Lines 3–32 |
+| [renderResults()](js/renderer.js#L34-END) | Renders recipe result cards | Lines 34–END |
+
+**Exports:** `renderIngredients()`, `renderResults()`
+
+**Dependencies:** Requires `userIngredients` from state.js
+
+---
+
+## Events Layer — [js/events.js](js/events.js)
+
+Event listener setup and delegation:
+
+| Function | Purpose | Location |
+|----------|---------|----------|
+| [setupEventListeners()](js/events.js#L3-END) | Attaches all event handlers to DOM elements | Lines 3–END |
+
+**Exports:** `setupEventListeners()`
+
+**Event Handlers:**
+- Form submit → `addIngredient()`
+- Find button click → `matchRecipes()` + `renderResults()`
+- Clear button click → `clearIngredients()`
+- Chip remove button → `removeIngredient()`
+
+---
+
+## Initialization — [js/main.js](js/main.js)
+
+App startup sequence:
 
 | Item | Purpose | Location |
 |------|---------|----------|
-| [ingredientAliases object](app.js#L1-L26) | 20+ ingredient groupings for fuzzy matching | Lines 1–26 |
+| [DOMContentLoaded listener](js/main.js#L3-END) | Boots up app when DOM is ready | Lines 3–END |
 
-**Example:**
-- `beef: ["ground beef", "beef", "steak"]`
-- `beans: ["black beans", "beans", "kidney beans"]`
-- `grains: ["rice", "pasta", "noodles", "bread", ...]`
+**Startup sequence:**
+1. Wait for DOM to load
+2. Call `renderIngredients()` to show empty UI
+3. Call `setupEventListeners()` to activate interactivity
 
-### Recipe Catalog
-
-| Item | Purpose | Location |
-|------|---------|----------|
-| [recipeCatalog array](app.js#L48-L570) | 70+ recipes with name, ingredients, and notes | Lines 48–570 |
-
-**Catalog structure** (each recipe):
-```javascript
-{
-  name: "Tomato Basil Pasta",
-  ingredients: ["pasta", "tomato", "garlic", "olive oil", "basil", "salt"],
-  notes: "Quick cooking method description..."
-}
-```
+**Exports:** None (runs initialization)
 
 ---
 
@@ -130,28 +160,49 @@ The recipe catalog and ingredient aliases:
 ```
 HTML Input
     ↓
-[addIngredient] normalizes → [userIngredients] state
+[addIngredient] normalizes → [userIngredients] state (state.js)
     ↓
-[renderIngredients] → display as chips ← CSS animates
+[renderIngredients] → display as chips ← CSS animates (renderer.js)
     ↓
 User clicks "Find Recipes"
     ↓
-[expandIngredient] expands terms using aliases
+[expandIngredient] expands terms using aliases (matching.js)
     ↓
-[matchRecipes] compares against recipeCatalog
+[matchRecipes] compares against recipeCatalog (matching.js)
     ↓
-[renderResults] creates result cards ← CSS styles
+[renderResults] creates result cards ← CSS styles (renderer.js)
     ↓
 Displayed to user
 ```
 
 ---
 
-## Quick File Summary
+## Module Dependency Graph
 
-- **[index.html](index.html)** — 62 lines — UI structure
-- **[styles.css](styles.css)** — 217 lines — Styling and animations
-- **[app.js](app.js)** — 673 lines — Logic, matching, and data
-  - Lines 1–26: Ingredient aliases
-  - Lines 48–570: Recipe catalog
-  - Lines 77–672: Functions and event listeners
+```
+main.js (startup)
+  ├─→ state.js (requires: none)
+  ├─→ renderer.js (requires: state.js, matching.js)
+  ├─→ events.js (requires: state.js, matching.js, renderer.js)
+  │
+  And implicitly available:
+  ├─→ data.js (ingredientAliases, recipeCatalog)
+  └─→ matching.js (requires: data.js, state.js)
+```
+
+---
+
+## File Sizes & Line Counts
+
+| File | Purpose | Lines |
+|------|---------|-------|
+| [index.html](index.html) | HTML structure | ~65 |
+| [styles.css](styles.css) | All styling | 217 |
+| [js/data.js](js/data.js) | Recipes + aliases | ~520 |
+| [js/state.js](js/state.js) | State management | 29 |
+| [js/matching.js](js/matching.js) | Matching logic | ~40 |
+| [js/renderer.js](js/renderer.js) | DOM rendering | ~70 |
+| [js/events.js](js/events.js) | Event setup | ~20 |
+| [js/main.js](js/main.js) | Initialization | ~8 |
+
+**Total organized code:** ~969 lines (split across focused modules)
