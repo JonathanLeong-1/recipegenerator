@@ -196,6 +196,26 @@ function extractJsonPayload(rawContent) {
   return JSON.parse(trimmed);
 }
 
+function normalizeNutritionValue(value) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 0) return null;
+  return Math.round(parsed * 10) / 10;
+}
+
+function normalizeNutrition(nutrition) {
+  const source = nutrition && typeof nutrition === "object" ? nutrition : {};
+
+  return {
+    calories: normalizeNutritionValue(source.calories),
+    proteinGrams: normalizeNutritionValue(source.proteinGrams ?? source.protein),
+    fatGrams: normalizeNutritionValue(source.fatGrams ?? source.fats ?? source.fat),
+    carbsGrams: normalizeNutritionValue(source.carbsGrams ?? source.carbs),
+    fiberGrams: normalizeNutritionValue(source.fiberGrams ?? source.fiber),
+    sugarGrams: normalizeNutritionValue(source.sugarGrams ?? source.sugar),
+    sodiumMg: normalizeNutritionValue(source.sodiumMg ?? source.sodium)
+  };
+}
+
 function normalizeGeneratedRecipe(recipe, pantrySet, targetServings) {
   const rawIngredients = Array.isArray(recipe.ingredients) ? recipe.ingredients : [];
   const parsedIngredients = rawIngredients.map(parseIngredientEntry).filter((item) => item.name);
@@ -226,6 +246,8 @@ function normalizeGeneratedRecipe(recipe, pantrySet, targetServings) {
     ? recipe.dietaryTags.map((tag) => String(tag || "").trim().toLowerCase()).filter(Boolean)
     : [];
 
+  const nutrition = normalizeNutrition(recipe.nutrition);
+
   return {
     name: String(recipe.name || "Untitled Recipe").trim(),
     ingredients: ingredientNames,
@@ -237,6 +259,7 @@ function normalizeGeneratedRecipe(recipe, pantrySet, targetServings) {
     timeMinutes,
     difficulty,
     dietaryTags,
+    nutrition,
     baseServings,
     targetServings
   };
@@ -264,7 +287,7 @@ async function generateRecipesWithLLM(userIngredientList, preferences = getGener
     "You are a practical cooking assistant.",
     "Create realistic recipe suggestions from the user's pantry ingredients.",
     "Return only JSON with this shape:",
-    '{"recipes":[{"name":"string","ingredients":[{"name":"string","quantity":0,"unit":"string"}],"notes":"string","score":0.0,"timeMinutes":20,"difficulty":"easy|medium|hard","dietaryTags":["string"],"baseServings":2}]}',
+    '{"recipes":[{"name":"string","ingredients":[{"name":"string","quantity":0,"unit":"string"}],"notes":"string","score":0.0,"timeMinutes":20,"difficulty":"easy|medium|hard","dietaryTags":["string"],"baseServings":2,"nutrition":{"calories":450,"proteinGrams":28,"fatGrams":16,"carbsGrams":42,"fiberGrams":8,"sugarGrams":6,"sodiumMg":640}}]}',
     "Rules:",
     "- Return 3 to 6 recipes.",
     "- Keep recipes beginner-friendly and concise.",
@@ -272,6 +295,8 @@ async function generateRecipesWithLLM(userIngredientList, preferences = getGener
     "- Every ingredient should include quantity and unit when possible.",
     "- score must be a number from 0 to 1 based on fit with user's pantry.",
     "- Include timeMinutes, difficulty, dietaryTags, and baseServings for each recipe.",
+    "- Include a nutrition object for each recipe with estimated values per serving.",
+    "- nutrition should include calories, proteinGrams, fatGrams, carbsGrams, and if possible fiberGrams, sugarGrams, sodiumMg.",
     "- Respect user constraints for dietary restrictions, difficulty, max cook time, and servings.",
     "- No markdown, no explanation, only valid JSON."
   ].join("\n");

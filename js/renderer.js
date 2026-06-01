@@ -1,5 +1,23 @@
 // UI Layer: DOM Rendering
 
+function hasNutritionData(nutrition) {
+  if (!nutrition || typeof nutrition !== "object") return false;
+  return [
+    nutrition.calories,
+    nutrition.proteinGrams,
+    nutrition.fatGrams,
+    nutrition.carbsGrams,
+    nutrition.fiberGrams,
+    nutrition.sugarGrams,
+    nutrition.sodiumMg
+  ].some((value) => Number.isFinite(value));
+}
+
+function formatNutritionStat(label, value, unit = "") {
+  if (!Number.isFinite(value)) return "";
+  return `${label}: ${value}${unit}`;
+}
+
 function renderIngredients() {
   const chipsContainer = document.getElementById("ingredientChips");
   chipsContainer.innerHTML = "";
@@ -105,6 +123,7 @@ function renderResults(matches, options = {}) {
 
     let details = null;
     let scaled = null;
+    let nutrition = null;
 
     if (recipe.timeMinutes || recipe.difficulty || (recipe.dietaryTags && recipe.dietaryTags.length > 0) || recipe.targetServings) {
       details = document.createElement("p");
@@ -136,12 +155,30 @@ function renderResults(matches, options = {}) {
       scaled.textContent = `Scaled ingredients: ${recipe.scaledIngredients.join(", ")}`;
     }
 
+    if (hasNutritionData(recipe.nutrition)) {
+      nutrition = document.createElement("p");
+      nutrition.className = "meta";
+
+      const nutritionParts = [
+        formatNutritionStat("Calories", recipe.nutrition.calories, " kcal"),
+        formatNutritionStat("Protein", recipe.nutrition.proteinGrams, " g"),
+        formatNutritionStat("Fat", recipe.nutrition.fatGrams, " g"),
+        formatNutritionStat("Carbs", recipe.nutrition.carbsGrams, " g"),
+        formatNutritionStat("Fiber", recipe.nutrition.fiberGrams, " g"),
+        formatNutritionStat("Sugar", recipe.nutrition.sugarGrams, " g"),
+        formatNutritionStat("Sodium", recipe.nutrition.sodiumMg, " mg")
+      ].filter(Boolean);
+
+      nutrition.textContent = `Nutrition (per serving): ${nutritionParts.join(" | ")}`;
+    }
+
     card.appendChild(headerRow);
     card.appendChild(have);
     card.appendChild(missing);
     card.appendChild(notes);
     if (details) card.appendChild(details);
     if (scaled) card.appendChild(scaled);
+    if (nutrition) card.appendChild(nutrition);
     resultsContainer.appendChild(card);
   });
 }
