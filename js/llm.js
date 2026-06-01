@@ -1,6 +1,5 @@
 // LLM Layer: Generate recipe ideas from user ingredients
 
-const LLM_STORAGE_KEY = "pantry_to_plate_openai_key";
 const LLM_PREFS_STORAGE_KEY = "pantry_to_plate_prefs";
 const DEFAULT_MODEL = "gpt-4o-mini";
 const DEFAULT_STAPLES = ["salt", "pepper", "oil", "garlic"];
@@ -133,29 +132,7 @@ function getGenerationPreferences() {
 }
 
 function initializeLLMControls() {
-  const apiKeyInput = document.getElementById("apiKeyInput");
-  const modelInput = document.getElementById("modelInput");
-
-  if (!apiKeyInput || !modelInput) return;
-
-  const savedApiKey = localStorage.getItem(LLM_STORAGE_KEY);
-  if (savedApiKey) {
-    apiKeyInput.value = savedApiKey;
-  }
-
-  if (!modelInput.value.trim()) {
-    modelInput.value = DEFAULT_MODEL;
-  }
-
   hydratePreferencesFromStorage();
-
-  apiKeyInput.addEventListener("change", () => {
-    localStorage.setItem(LLM_STORAGE_KEY, apiKeyInput.value.trim());
-  });
-
-  apiKeyInput.addEventListener("blur", () => {
-    localStorage.setItem(LLM_STORAGE_KEY, apiKeyInput.value.trim());
-  });
 
   ["cookTimeSelect", "difficultySelect", "servingsSelect", "useStaplesToggle"].forEach((id) => {
     const element = document.getElementById(id);
@@ -168,17 +145,8 @@ function initializeLLMControls() {
   });
 }
 
-function getLLMApiKey() {
-  const apiKeyInput = document.getElementById("apiKeyInput");
-  const inputValue = apiKeyInput ? apiKeyInput.value.trim() : "";
-  const storedValue = localStorage.getItem(LLM_STORAGE_KEY) || "";
-  return inputValue || storedValue;
-}
-
 function getLLMModel() {
-  const modelInput = document.getElementById("modelInput");
-  const selected = modelInput ? modelInput.value.trim() : "";
-  return selected || DEFAULT_MODEL;
+  return DEFAULT_MODEL;
 }
 
 function extractJsonPayload(rawContent) {
@@ -270,11 +238,6 @@ async function generateRecipesWithLLM(userIngredientList, preferences = getGener
     return [];
   }
 
-  const apiKey = getLLMApiKey();
-  if (!apiKey) {
-    throw new Error("Add your OpenAI API key to generate recipes with AI.");
-  }
-
   const model = getLLMModel();
   const pantryIngredients = userIngredientList.map((item) => item.toLowerCase());
   const pantrySet = new Set(pantryIngredients);
@@ -314,11 +277,10 @@ async function generateRecipesWithLLM(userIngredientList, preferences = getGener
   preferenceLines.push(`Target servings: ${preferences.servings}`);
   preferenceLines.push(`Include pantry staples: ${preferences.includeStaples ? "yes" : "no"}`);
 
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+  const response = await fetch("/api/recipes", {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`
+      "Content-Type": "application/json"
     },
     body: JSON.stringify({
       model,
@@ -338,7 +300,7 @@ async function generateRecipesWithLLM(userIngredientList, preferences = getGener
   });
 
   if (!response.ok) {
-    let message = `OpenAI request failed (${response.status}).`;
+    let message = `Recipe generation request failed (${response.status}).`;
     try {
       const errorData = await response.json();
       if (errorData && errorData.error && errorData.error.message) {
