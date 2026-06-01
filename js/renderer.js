@@ -32,9 +32,13 @@ function renderIngredients() {
   }
 }
 
-function renderResults(matches) {
+function renderResults(matches, options = {}) {
   const resultsContainer = document.getElementById("results");
   const resultHint = document.getElementById("resultHint");
+  const source = options.source || "catalog";
+  const errorMessage = options.errorMessage || "";
+  const loading = Boolean(options.loading);
+  const preferences = options.preferences || null;
   
   resultsContainer.innerHTML = "";
 
@@ -43,13 +47,29 @@ function renderResults(matches) {
     return;
   }
 
-  if (matches.length === 0) {
-    resultHint.textContent =
-      "No close matches found yet. Try adding more core ingredients like rice, egg, pasta, or tomato.";
+  if (loading) {
+    resultHint.textContent = "Generating recipe options with AI using your filters...";
     return;
   }
 
-  resultHint.textContent = `Found ${matches.length} potential meal${matches.length > 1 ? "s" : ""}.`;
+  if (matches.length === 0) {
+    if (errorMessage) {
+      resultHint.textContent = `AI error: ${errorMessage}`;
+      return;
+    }
+
+    resultHint.textContent = "No recipe options found yet. Try adding more core ingredients like rice, egg, pasta, or tomato.";
+    return;
+  }
+
+  if (source === "llm") {
+    const servingSuffix = preferences && preferences.servings ? ` for ${preferences.servings} serving${preferences.servings > 1 ? "s" : ""}` : "";
+    resultHint.textContent = `Generated ${matches.length} AI meal option${matches.length > 1 ? "s" : ""}${servingSuffix} based on your ingredients.`;
+  } else if (source === "fallback" && errorMessage) {
+    resultHint.textContent = `AI unavailable (${errorMessage}). Showing ${matches.length} catalog match${matches.length > 1 ? "es" : ""} instead.`;
+  } else {
+    resultHint.textContent = `Found ${matches.length} potential meal${matches.length > 1 ? "s" : ""}.`;
+  }
 
   matches.forEach((recipe) => {
     const card = document.createElement("article");
@@ -70,7 +90,7 @@ function renderResults(matches) {
 
     const have = document.createElement("p");
     have.className = "meta";
-    have.textContent = `You have: ${recipe.available.join(", ")}`;
+    have.textContent = `You have: ${recipe.available.length > 0 ? recipe.available.join(", ") : "none"}`;
 
     const missing = document.createElement("p");
     missing.className = "meta missing";
@@ -81,12 +101,47 @@ function renderResults(matches) {
 
     const notes = document.createElement("p");
     notes.className = "meta";
-    notes.textContent = `Quick method: ${recipe.notes}`;
+    notes.textContent = `Quick method: ${recipe.notes || "Use your available ingredients and cook to taste."}`;
+
+    let details = null;
+    let scaled = null;
+
+    if (recipe.timeMinutes || recipe.difficulty || (recipe.dietaryTags && recipe.dietaryTags.length > 0) || recipe.targetServings) {
+      details = document.createElement("p");
+      details.className = "meta";
+      const detailParts = [];
+
+      if (recipe.timeMinutes) {
+        detailParts.push(`${recipe.timeMinutes} min`);
+      }
+
+      if (recipe.difficulty) {
+        detailParts.push(`Difficulty: ${recipe.difficulty}`);
+      }
+
+      if (recipe.targetServings) {
+        detailParts.push(`Serves: ${recipe.targetServings}`);
+      }
+
+      if (recipe.dietaryTags && recipe.dietaryTags.length > 0) {
+        detailParts.push(`Dietary: ${recipe.dietaryTags.join(", ")}`);
+      }
+
+      details.textContent = detailParts.join(" | ");
+    }
+
+    if (recipe.scaledIngredients && recipe.scaledIngredients.length > 0) {
+      scaled = document.createElement("p");
+      scaled.className = "meta";
+      scaled.textContent = `Scaled ingredients: ${recipe.scaledIngredients.join(", ")}`;
+    }
 
     card.appendChild(headerRow);
     card.appendChild(have);
     card.appendChild(missing);
     card.appendChild(notes);
+    if (details) card.appendChild(details);
+    if (scaled) card.appendChild(scaled);
     resultsContainer.appendChild(card);
   });
 }

@@ -127,6 +127,94 @@ body {
   gap: 0.5rem;
 }
 
+.llm-config {
+  margin-top: 0.6rem;
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 0.5rem;
+}
+
+.llm-config input {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.72rem 0.85rem;
+  font-size: 0.92rem;
+  background: #fff;
+}
+
+.llm-config input:focus {
+  outline: 2px solid #006d7744;
+  border-color: var(--accent);
+}
+
+.prefs {
+  margin-top: 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff9ef;
+  padding: 0.7rem;
+}
+
+.prefs-group {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.prefs-group legend {
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+}
+
+.prefs-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.prefs-tags label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.88rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+}
+
+.prefs-row {
+  margin-top: 0.65rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.pref-field {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.84rem;
+  color: var(--ink-soft);
+}
+
+.pref-field select {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.55rem 0.6rem;
+  background: #fff;
+  font: inherit;
+  color: var(--ink);
+}
+
+.pref-toggle {
+  margin-top: 0.65rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.9rem;
+}
+
 .ingredient-form input {
   flex: 1;
   border: 1px solid var(--line);
@@ -156,6 +244,12 @@ button:hover {
 
 button:active {
   transform: translateY(0);
+}
+
+button:disabled {
+  opacity: 0.72;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .ingredient-form button,
@@ -292,6 +386,14 @@ button:active {
 
   .ingredient-form {
     flex-direction: column;
+  }
+
+  .llm-config {
+    grid-template-columns: 1fr;
+  }
+
+  .prefs-row {
+    grid-template-columns: 1fr;
   }
 
   .ingredient-form button {

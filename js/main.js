@@ -3,5 +3,6 @@
 
 document.addEventListener("DOMContentLoaded", () => {
   renderIngredients();
+  initializeLLMControls();
   setupEventListeners();
 });
