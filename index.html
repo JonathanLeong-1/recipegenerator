@@ -43,6 +43,58 @@
           <button type="submit">Add</button>
         </form>
 
+        <div class="prefs" aria-label="Recipe preferences">
+          <fieldset class="prefs-group">
+            <legend>Dietary filters</legend>
+            <div class="prefs-tags">
+              <label><input type="checkbox" name="dietary" value="vegetarian" /> Vegetarian</label>
+              <label><input type="checkbox" name="dietary" value="vegan" /> Vegan</label>
+              <label><input type="checkbox" name="dietary" value="gluten-free" /> Gluten-free</label>
+              <label><input type="checkbox" name="dietary" value="dairy-free" /> Dairy-free</label>
+              <label><input type="checkbox" name="dietary" value="nut-free" /> Nut-free</label>
+              <label><input type="checkbox" name="dietary" value="halal" /> Halal</label>
+            </div>
+          </fieldset>
+
+          <div class="prefs-row">
+            <label class="pref-field" for="cookTimeSelect">
+              Max cook time
+              <select id="cookTimeSelect">
+                <option value="">Any</option>
+                <option value="15">15 min</option>
+                <option value="30">30 min</option>
+                <option value="45">45 min</option>
+                <option value="60">60 min</option>
+              </select>
+            </label>
+
+            <label class="pref-field" for="difficultySelect">
+              Difficulty
+              <select id="difficultySelect">
+                <option value="">Any</option>
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
+              </select>
+            </label>
+
+            <label class="pref-field" for="servingsSelect">
+              Servings
+              <select id="servingsSelect">
+                <option value="1">1</option>
+                <option value="2" selected>2</option>
+                <option value="4">4</option>
+                <option value="6">6</option>
+              </select>
+            </label>
+          </div>
+
+          <label class="pref-toggle" for="useStaplesToggle">
+            <input id="useStaplesToggle" type="checkbox" checked />
+            Assume pantry staples (salt, pepper, oil, garlic)
+          </label>
+        </div>
+
         <div id="ingredientChips" class="chips" aria-live="polite"></div>
         <button id="findRecipesBtn" class="primary-btn" type="button">
           Find Potential Meals
@@ -94,6 +146,9 @@
     
     <!-- Logic Layer -->
     <script src="js/matching.js"></script>
+
+    <!-- LLM Layer -->
+    <script src="js/llm.js"></script>
     
     <!-- UI Layer -->
     <script src="js/renderer.js"></script>

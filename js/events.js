@@ -16,9 +16,31 @@ function setupEventListeners() {
     ingredientInput.focus();
   });
 
-  findRecipesBtn.addEventListener("click", () => {
-    const matches = matchRecipes();
-    renderResults(matches);
+  findRecipesBtn.addEventListener("click", async () => {
+    if (userIngredients.size === 0) {
+      renderResults([]);
+      return;
+    }
+
+    findRecipesBtn.disabled = true;
+    findRecipesBtn.textContent = "Generating...";
+    const preferences = getGenerationPreferences();
+    renderResults([], { loading: true, preferences });
+
+    try {
+      const llmMatches = await generateRecipesWithLLM([...getIngredients()], preferences);
+      renderResults(llmMatches, { source: "llm", preferences });
+    } catch (error) {
+      const fallbackMatches = matchRecipes();
+      renderResults(fallbackMatches, {
+        source: "fallback",
+        preferences,
+        errorMessage: error instanceof Error ? error.message : "Could not generate recipes with AI."
+      });
+    } finally {
+      findRecipesBtn.disabled = false;
+      findRecipesBtn.textContent = "Find Recipes";
+    }
   });
 
   generateAiBtn.addEventListener("click", async () => {

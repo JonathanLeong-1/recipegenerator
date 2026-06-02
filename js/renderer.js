@@ -1,5 +1,23 @@
 // UI Layer: DOM Rendering
 
+function hasNutritionData(nutrition) {
+  if (!nutrition || typeof nutrition !== "object") return false;
+  return [
+    nutrition.calories,
+    nutrition.proteinGrams,
+    nutrition.fatGrams,
+    nutrition.carbsGrams,
+    nutrition.fiberGrams,
+    nutrition.sugarGrams,
+    nutrition.sodiumMg
+  ].some((value) => Number.isFinite(value));
+}
+
+function formatNutritionStat(label, value, unit = "") {
+  if (!Number.isFinite(value)) return "";
+  return `${label}: ${value}${unit}`;
+}
+
 function renderIngredients() {
   const chipsContainer = document.getElementById("ingredientChips");
   chipsContainer.innerHTML = "";
@@ -32,14 +50,23 @@ function renderIngredients() {
   }
 }
 
-function renderResults(matches) {
+function renderResults(matches, options = {}) {
   const resultsContainer = document.getElementById("results");
   const resultHint = document.getElementById("resultHint");
+  const source = options.source || "catalog";
+  const errorMessage = options.errorMessage || "";
+  const loading = Boolean(options.loading);
+  const preferences = options.preferences || null;
   
   resultsContainer.innerHTML = "";
 
   if (userIngredients.size === 0) {
     resultHint.textContent = "Add at least one ingredient to get started.";
+    return;
+  }
+
+  if (loading) {
+    resultHint.textContent = "Generating recipe options with AI using your filters...";
     return;
   }
 
@@ -76,7 +103,7 @@ function renderResults(matches) {
 
     const have = document.createElement("p");
     have.className = "meta";
-    have.textContent = `You have: ${recipe.available.join(", ")}`;
+    have.textContent = `You have: ${recipe.available.length > 0 ? recipe.available.join(", ") : "none"}`;
 
     const missing = document.createElement("p");
     missing.className = "meta missing";
@@ -87,7 +114,58 @@ function renderResults(matches) {
 
     const notes = document.createElement("p");
     notes.className = "meta";
-    notes.textContent = `Quick method: ${recipe.notes}`;
+    notes.textContent = `Quick method: ${recipe.notes || "Use your available ingredients and cook to taste."}`;
+
+    let details = null;
+    let scaled = null;
+    let nutrition = null;
+
+    if (recipe.timeMinutes || recipe.difficulty || (recipe.dietaryTags && recipe.dietaryTags.length > 0) || recipe.targetServings) {
+      details = document.createElement("p");
+      details.className = "meta";
+      const detailParts = [];
+
+      if (recipe.timeMinutes) {
+        detailParts.push(`${recipe.timeMinutes} min`);
+      }
+
+      if (recipe.difficulty) {
+        detailParts.push(`Difficulty: ${recipe.difficulty}`);
+      }
+
+      if (recipe.targetServings) {
+        detailParts.push(`Serves: ${recipe.targetServings}`);
+      }
+
+      if (recipe.dietaryTags && recipe.dietaryTags.length > 0) {
+        detailParts.push(`Dietary: ${recipe.dietaryTags.join(", ")}`);
+      }
+
+      details.textContent = detailParts.join(" | ");
+    }
+
+    if (recipe.scaledIngredients && recipe.scaledIngredients.length > 0) {
+      scaled = document.createElement("p");
+      scaled.className = "meta";
+      scaled.textContent = `Scaled ingredients: ${recipe.scaledIngredients.join(", ")}`;
+    }
+
+    if (hasNutritionData(recipe.nutrition)) {
+      nutrition = document.createElement("p");
+      nutrition.className = "meta";
+
+      const nutritionParts = [
+        formatNutritionStat("Calories", recipe.nutrition.calories, " kcal"),
+        formatNutritionStat("Protein", recipe.nutrition.proteinGrams, " g"),
+        formatNutritionStat("Fat", recipe.nutrition.fatGrams, " g"),
+        formatNutritionStat("Carbs", recipe.nutrition.carbsGrams, " g"),
+        formatNutritionStat("Fiber", recipe.nutrition.fiberGrams, " g"),
+        formatNutritionStat("Sugar", recipe.nutrition.sugarGrams, " g"),
+        formatNutritionStat("Sodium", recipe.nutrition.sodiumMg, " mg")
+      ].filter(Boolean);
+
+      nutrition.textContent = `Nutrition (per serving): ${nutritionParts.join(" | ")}`;
+    }
 
     const adjust = document.createElement("p");
     adjust.className = "meta";

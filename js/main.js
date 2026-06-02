@@ -3,6 +3,7 @@
 
 document.addEventListener("DOMContentLoaded", () => {
   renderIngredients();
+  initializeLLMControls();
   setupEventListeners();
   setAiButtonEnabled(true);
   setAiRecipeOutput("Add ingredients, then generate a recipe.");
