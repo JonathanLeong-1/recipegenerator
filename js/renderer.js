@@ -45,11 +45,17 @@ function renderResults(matches) {
 
   if (matches.length === 0) {
     resultHint.textContent =
-      "No close matches found yet. Try adding more core ingredients like rice, egg, pasta, or tomato.";
+      "No matching recipes found for that ingredient combination. Try fewer or broader ingredients.";
     return;
   }
 
-  resultHint.textContent = `Found ${matches.length} potential meal${matches.length > 1 ? "s" : ""}.`;
+  if (userIngredients.size >= 3) {
+    resultHint.textContent =
+      `Found ${matches.length} potential meal${matches.length > 1 ? "s" : ""}. ` +
+      "Some options may work best if you skip one or more ingredients.";
+  } else {
+    resultHint.textContent = `Found ${matches.length} potential meal${matches.length > 1 ? "s" : ""}.`;
+  }
 
   matches.forEach((recipe) => {
     const card = document.createElement("article");
@@ -83,10 +89,39 @@ function renderResults(matches) {
     notes.className = "meta";
     notes.textContent = `Quick method: ${recipe.notes}`;
 
+    const adjust = document.createElement("p");
+    adjust.className = "meta";
+    if (Array.isArray(recipe.unmatchedUserIngredients) && recipe.unmatchedUserIngredients.length > 0) {
+      adjust.textContent = `To match this recipe, try without: ${recipe.unmatchedUserIngredients.join(", ")}.`;
+    } else {
+      adjust.textContent = "Matches all ingredients you entered.";
+    }
+
     card.appendChild(headerRow);
     card.appendChild(have);
     card.appendChild(missing);
     card.appendChild(notes);
+    card.appendChild(adjust);
     resultsContainer.appendChild(card);
   });
+}
+
+function setAiStatus(message) {
+  const status = document.getElementById("aiStatus");
+  status.textContent = message;
+}
+
+function setAiRecipeOutput(message) {
+  const output = document.getElementById("aiRecipeOutput");
+  output.textContent = message;
+}
+
+function setAiButtonEnabled(enabled) {
+  const button = document.getElementById("generateAiBtn");
+  button.disabled = !enabled;
+}
+
+function setModelInfo(message) {
+  const modelInfo = document.getElementById("modelInfo");
+  modelInfo.textContent = message;
 }

@@ -15,10 +15,10 @@ ranked by how well each recipe matches what they already have.
 
 ## Run Locally
 
-1. Start a local static file server from this folder:
+1. Start the Node server from this folder:
 
 	```bash
-	python3 -m http.server 8000
+	npm start
 	```
 
 2. Open this URL in your browser:
@@ -26,6 +26,40 @@ ranked by how well each recipe matches what they already have.
 	```text
 	http://localhost:8000
 	```
+
+## AI Recipe Endpoint
+
+The app can optionally call a real LLM through a server-side proxy endpoint.
+
+1. Create a local `.env` file once:
+
+	```bash
+	cp .env.example .env
+	```
+
+2. Put your OpenAI-compatible API key in `.env`:
+
+	```bash
+	OPENAI_API_KEY=your_key_here
+	```
+
+3. Optional: override the API base URL or model in `.env`:
+
+	```bash
+	OPENAI_BASE_URL=https://api.openai.com/v1
+	OPENAI_MODEL=gpt-4o-mini
+	```
+
+4. Start the app with:
+
+	```bash
+	npm start
+	```
+
+OPENAI_API_KEY is required for AI recipe generation.
+If the key is missing, the AI button is disabled until you update `.env` and restart.
+
+Note: `.env` is ignored by git so your key stays local.
 
 ## Project Structure
 

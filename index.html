@@ -44,10 +44,37 @@
         </form>
 
         <div id="ingredientChips" class="chips" aria-live="polite"></div>
-
         <button id="findRecipesBtn" class="primary-btn" type="button">
-          Find Recipes
+          Find Potential Meals
         </button>
+
+      </section>
+
+      <section class="card" aria-labelledby="ai-title">
+        <div class="card-header">
+          <h2 id="ai-title">AI Recipe Builder</h2>
+          <span id="aiStatus" class="meta">Checking API...</span>
+        </div>
+        <p class="meta">
+          Uses a server-side API key so the browser never exposes your LLM credentials.
+        </p>
+        <p id="modelInfo" class="meta">Model: unknown</p>
+        <label class="sr-only" for="aiRecipePrompt">AI recipe preferences</label>
+        <textarea
+          id="aiRecipePrompt"
+          class="ai-prompt-input"
+          rows="4"
+          placeholder="Optional: make it high protein, spicy, vegetarian, budget-friendly..."
+        ></textarea>
+        <div class="ai-actions">
+          <button id="generateAiBtn" class="primary-btn" type="button">
+            Find Recipes with AI
+          </button>
+          <button id="showModelBtn" class="ghost-btn" type="button">
+            Show Model
+          </button>
+        </div>
+        <div id="aiRecipeOutput" class="ai-output">Add ingredients, then generate a recipe.</div>
       </section>
 
       <section class="card" aria-labelledby="result-title">
@@ -70,6 +97,9 @@
     
     <!-- UI Layer -->
     <script src="js/renderer.js"></script>
+
+    <!-- API Layer -->
+    <script src="js/api.js"></script>
     
     <!-- Events Layer -->
     <script src="js/events.js"></script>
