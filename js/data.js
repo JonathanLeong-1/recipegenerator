@@ -12,6 +12,7 @@ const ingredientAliases = {
   sauce: ["soy sauce", "caesar dressing", "salsa"],
   chips: ["tortilla chips", "chips"],
   oil: ["oil", "olive oil", "sesame oil"],
+  meat: ["beef", "ground beef", "steak", "chicken", "turkey", "shrimp", "salmon", "tuna"],
   protein: ["chicken", "beef", "turkey", "shrimp", "salmon", "tuna"],
   grains: ["rice", "pasta", "noodles", "bread", "tortilla", "couscous", "oats"],
   veggies: ["spinach", "broccoli", "carrot", "onion", "garlic", "tomato", "cucumber", "lettuce"],

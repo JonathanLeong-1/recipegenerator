@@ -71,20 +71,15 @@ function renderResults(matches, options = {}) {
   }
 
   if (matches.length === 0) {
-    if (errorMessage) {
-      resultHint.textContent = `AI error: ${errorMessage}`;
-      return;
-    }
-
-    resultHint.textContent = "No recipe options found yet. Try adding more core ingredients like rice, egg, pasta, or tomato.";
+    resultHint.textContent =
+      "No matching recipes found for that ingredient combination. Try fewer or broader ingredients.";
     return;
   }
 
-  if (source === "llm") {
-    const servingSuffix = preferences && preferences.servings ? ` for ${preferences.servings} serving${preferences.servings > 1 ? "s" : ""}` : "";
-    resultHint.textContent = `Generated ${matches.length} AI meal option${matches.length > 1 ? "s" : ""}${servingSuffix} based on your ingredients.`;
-  } else if (source === "fallback" && errorMessage) {
-    resultHint.textContent = `AI unavailable (${errorMessage}). Showing ${matches.length} catalog match${matches.length > 1 ? "es" : ""} instead.`;
+  if (userIngredients.size >= 3) {
+    resultHint.textContent =
+      `Found ${matches.length} potential meal${matches.length > 1 ? "s" : ""}. ` +
+      "Some options may work best if you skip one or more ingredients.";
   } else {
     resultHint.textContent = `Found ${matches.length} potential meal${matches.length > 1 ? "s" : ""}.`;
   }
@@ -172,13 +167,39 @@ function renderResults(matches, options = {}) {
       nutrition.textContent = `Nutrition (per serving): ${nutritionParts.join(" | ")}`;
     }
 
+    const adjust = document.createElement("p");
+    adjust.className = "meta";
+    if (Array.isArray(recipe.unmatchedUserIngredients) && recipe.unmatchedUserIngredients.length > 0) {
+      adjust.textContent = `To match this recipe, try without: ${recipe.unmatchedUserIngredients.join(", ")}.`;
+    } else {
+      adjust.textContent = "Matches all ingredients you entered.";
+    }
+
     card.appendChild(headerRow);
     card.appendChild(have);
     card.appendChild(missing);
     card.appendChild(notes);
-    if (details) card.appendChild(details);
-    if (scaled) card.appendChild(scaled);
-    if (nutrition) card.appendChild(nutrition);
+    card.appendChild(adjust);
     resultsContainer.appendChild(card);
   });
+}
+
+function setAiStatus(message) {
+  const status = document.getElementById("aiStatus");
+  status.textContent = message;
+}
+
+function setAiRecipeOutput(message) {
+  const output = document.getElementById("aiRecipeOutput");
+  output.textContent = message;
+}
+
+function setAiButtonEnabled(enabled) {
+  const button = document.getElementById("generateAiBtn");
+  button.disabled = !enabled;
+}
+
+function setModelInfo(message) {
+  const modelInfo = document.getElementById("modelInfo");
+  modelInfo.textContent = message;
 }

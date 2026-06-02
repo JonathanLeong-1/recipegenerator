@@ -1,15 +1,43 @@
 // Logic Layer: Ingredient Alias Expansion and Recipe Matching
 
+const categoryAliases = new Set([
+  "protein",
+  "grains",
+  "veggies",
+  "spices",
+  "herbs",
+  "dairy",
+  "nuts",
+  "citrus",
+  "fruit"
+]);
+
 function expandIngredient(userInput) {
-  // Return the user input and any aliases that match
-  const expanded = [userInput.toLowerCase()];
-  
+  const normalizedInput = userInput.toLowerCase();
+  const expanded = [normalizedInput];
+
   for (const [alias, variations] of Object.entries(ingredientAliases)) {
-    if (variations.some(v => v.toLowerCase().includes(userInput.toLowerCase()) || userInput.toLowerCase().includes(v.toLowerCase()))) {
-      expanded.push(...variations.map(v => v.toLowerCase()));
+    const aliasKey = alias.toLowerCase();
+    const normalizedVariations = variations.map((value) => value.toLowerCase());
+
+    if (normalizedInput === aliasKey) {
+      expanded.push(...normalizedVariations);
+      continue;
+    }
+
+    // If user typed a concrete ingredient (e.g., "rice"), avoid exploding into broad
+    // category groups like "grains". Keep broad expansion only when the category term
+    // itself is entered.
+    if (categoryAliases.has(aliasKey)) {
+      continue;
+    }
+
+    if (normalizedVariations.includes(normalizedInput)) {
+      expanded.push(...normalizedVariations);
+      expanded.push(aliasKey);
     }
   }
-  
+
   return [...new Set(expanded)];
 }
 
@@ -19,14 +47,26 @@ function matchRecipes() {
 
   // Expand user ingredients to include aliases
   const expandedUserIngredients = new Set();
+  const userIngredientGroups = ingredients.map((ingredient) => new Set(expandIngredient(ingredient)));
+
   ingredients.forEach((ingredient) => {
     expandIngredient(ingredient).forEach((expanded) => {
       expandedUserIngredients.add(expanded);
     });
   });
 
-  const matches = recipeCatalog
+  const allMatches = recipeCatalog
     .map((recipe) => {
+      const recipeIngredients = recipe.ingredients.map((item) => item.toLowerCase());
+      const matchedUserIngredientIndexes = userIngredientGroups
+        .map((group, index) => ({ group, index }))
+        .filter(({ group }) => recipeIngredients.some((item) => group.has(item)))
+        .map(({ index }) => index);
+      const matchedUserIngredients = matchedUserIngredientIndexes.length;
+      const unmatchedUserIngredients = ingredients.filter(
+        (_, index) => !matchedUserIngredientIndexes.includes(index)
+      );
+
       const available = recipe.ingredients.filter((item) => expandedUserIngredients.has(item.toLowerCase()));
       const missing = recipe.ingredients.filter((item) => !expandedUserIngredients.has(item.toLowerCase()));
       const score = available.length / recipe.ingredients.length;
@@ -35,11 +75,34 @@ function matchRecipes() {
         ...recipe,
         available,
         missing,
-        score
+        score,
+        matchedUserIngredients,
+        unmatchedUserIngredients,
+        dropCount: ingredients.length - matchedUserIngredients
       };
     })
-    .filter((recipe) => recipe.available.length > 0)
-    .sort((a, b) => b.score - a.score || a.missing.length - b.missing.length);
+    .filter((recipe) => recipe.matchedUserIngredients > 0)
+    .sort(
+      (a, b) =>
+        b.matchedUserIngredients - a.matchedUserIngredients ||
+        b.score - a.score ||
+        a.missing.length - b.missing.length
+    );
 
-  return matches;
+  if (ingredients.length < 3) {
+    return allMatches;
+  }
+
+  // Primary tier for 3+ inputs: recipes matching all entered ingredients or all but one.
+  const nearPerfectMatches = allMatches.filter(
+    (recipe) => recipe.matchedUserIngredients >= ingredients.length - 1
+  );
+
+  if (nearPerfectMatches.length > 0) {
+    return nearPerfectMatches;
+  }
+
+  // Fallback tier: if the catalog is sparse, still return strongest options.
+  const relaxedThreshold = Math.max(1, ingredients.length - 2);
+  return allMatches.filter((recipe) => recipe.matchedUserIngredients >= relaxedThreshold);
 }
